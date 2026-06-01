@@ -339,7 +339,7 @@ def evaluate(
         predictions_tensor = torch.tensor(predictions_list)
         targets_tensor = torch.tensor(targets_list)
         test_performance = mae_loss_function(predictions_tensor.squeeze(), targets_tensor.squeeze())
-        rmse = metrics.mean_squared_error(targets_list, predictions_list, squared=False)
+        rmse = float(np.sqrt(metrics.mean_squared_error(targets_list, predictions_list)))
         r2 = metrics.r2_score(targets_list, predictions_list)
 
         # correlations between targets_list and predictions_list
@@ -726,7 +726,7 @@ if __name__ == "__main__":
         scheduler = torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
             max_lr=learning_rate,
-            epochs=epochs,
+            epochs=max(epochs, 1),
             steps_per_epoch=steps_per_epoch,
             # pct_start=pct_start,
             pct_start=0.3,

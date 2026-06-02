@@ -6,8 +6,10 @@ import pandas as pd
 from transformers import AutoTokenizer
 
 from huggingface_hub import login
-token = "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"
-login(token)
+import os
+hf_token = os.environ.get("HF_TOKEN")
+if hf_token:
+    login(hf_token)
 
 def writeToJSON(data, where_to_save):
     """

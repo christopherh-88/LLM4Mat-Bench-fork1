@@ -1,0 +1,9 @@
+checkpoints/
+__pycache__/
+*.pyc
+.DS_Store
+data/jarvis_dft/train.csv
+data/snumat/train.csv
+data/mp/train.csv
+data/mp/test.csv
+data/mp/validation.csv

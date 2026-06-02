@@ -1,17 +1,17 @@
-from transformers import AutoTokenizer, pipeline, AutoModelForCausalLM, AutoTokenizer, LlamaForSequenceClassification
+from transformers import AutoTokenizer, pipeline, AutoModelForCausalLM, AutoTokenizer
 import transformers
 import torch
-# import replicate
 import os
 import time
 import pandas as pd
 import json
 import argparse
-from create_args_parser import *
+from create_args_parser import MODEL_HF_PATHS, args_parser
 
 from huggingface_hub import login
-token = "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"
-login(token)
+hf_token = os.environ.get("HF_TOKEN")
+if hf_token:
+    login(hf_token)
 
 def extract_ans_from_chat_llm(result):
     # Find the content within curly braces
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # set parameters
     args = args_parser()
     config = vars(args)
-    
+
     dataset_name = config.get('dataset_name')
     input_type = config.get('input_type')
     prompt_type = config.get('prompt_type')
@@ -102,22 +102,22 @@ if __name__ == "__main__":
     model_name = config.get("model_name")
     data_path = config.get("data_path")
     results_path = config.get("results_path")
-    
+
     results_path = f"{results_path}/{dataset_name}"
     if not os.path.exists(results_path):
         os.makedirs(results_path)
-        
+
     start = time.time()
-    
-    model = "meta-llama/Llama-2-7b-chat-hf" 
-    tokenizer = AutoTokenizer.from_pretrained(model, padding=True) 
+
+    model_hf_path = MODEL_HF_PATHS.get(model_name, model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_hf_path, padding=True)
 
     data = pd.read_csv(f"{data_path}/{dataset_name}/{dataset_name}_inference_prompts_data.csv")
     data = data.dropna(subset=[property_name])
 
     prompts = list(data[f'{property_name}_{input_type}_{prompt_type}'])
 
-    results = generate(model, tokenizer, prompts, max_len, batch_size)
+    results = generate(model_hf_path, tokenizer, prompts, max_len, batch_size)
 
     save_path = f"{results_path}/{model_name}_test_stats_for_{property_name}_{input_type}_{prompt_type}_{max_len}_{batch_size}.json"
     writeToJSON(results, save_path)

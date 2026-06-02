@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 # add the progress bar
 from tqdm import tqdm
 
-from transformers import AdamW
+from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from transformers import AutoTokenizer, T5EncoderModel, T5Tokenizer, BertTokenizerFast, BertModel
 from tokenizers.pre_tokenizers import Whitespace
@@ -102,7 +102,7 @@ def evaluate(
         predictions_tensor = torch.tensor(predictions_list)
         targets_tensor = torch.tensor(targets_list)
         test_performance = mae_loss_function(predictions_tensor.squeeze(), targets_tensor.squeeze())
-        rmse = metrics.mean_squared_error(targets_list, predictions_list, squared=False)
+        rmse = np.sqrt(metrics.mean_squared_error(targets_list, predictions_list))
         r2 = metrics.r2_score(targets_list, predictions_list)
 
         # correlations between targets_list and predictions_list
@@ -298,7 +298,12 @@ if __name__ == "__main__":
         tokenizer = AutoTokenizer.from_pretrained("t5-small") 
 
     elif tokenizer_name == 'llmprop_tokenizer' or model_name == 'llmprop':
-        tokenizer = AutoTokenizer.from_pretrained(f"{tokenizers_path}/llmprop_tokenizer") 
+        llmprop_tok_path = f"{tokenizers_path}/llmprop_tokenizer"
+        if os.path.exists(llmprop_tok_path):
+            tokenizer = AutoTokenizer.from_pretrained(llmprop_tok_path)
+        else:
+            print("Warning: llmprop_tokenizer not found, falling back to t5-small tokenizer")
+            tokenizer = AutoTokenizer.from_pretrained("t5-small")
 
     elif tokenizer_name == 'matbert_tokenizer' or model_name == 'matbert':
         tokenizer = BertTokenizerFast.from_pretrained(f"{tokenizers_path}/matbert-base-uncased", do_lower_case=True)
@@ -376,11 +381,16 @@ if __name__ == "__main__":
             for param in base_model.parameters():
                 param.requires_grad = False
 
-        # resizing the model input embeddings matrix to adapt to newly added tokens by the new tokenizer
-        # this is to avoid the "RuntimeError: CUDA error: device-side assert triggered" error
-        base_model.resize_token_embeddings(len(tokenizer))
-        
         best_model_path = f"{checkpoints_path}/{model_name}_best_checkpoint_for_{property}_{task_name}_{input_type}_{preprocessing_strategy}.pt"
+
+        # resize embeddings to match checkpoint vocab size (handles tokenizer mismatch)
+        ckpt = torch.load(best_model_path, map_location='cpu')
+        ckpt_vocab_size = next(
+            (v.shape[0] for k, v in ckpt.items() if 'shared.weight' in k or 'embed_tokens.weight' in k),
+            len(tokenizer)
+        )
+        base_model.resize_token_embeddings(ckpt_vocab_size)
+
         best_model = Predictor(base_model, base_model_output_size, drop_rate=drop_rate, pooling=pooling, model_name=model_name)
 
         device_ids = [d for d in range(torch.cuda.device_count())]

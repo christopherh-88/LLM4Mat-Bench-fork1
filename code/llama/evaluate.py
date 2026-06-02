@@ -7,7 +7,7 @@ import re
 from torchmetrics.classification import BinaryAUROC
 from sklearn import metrics
 
-from create_args_parser import *
+from create_args_parser import args_parser
 
 def readJSON(input_file):
     """

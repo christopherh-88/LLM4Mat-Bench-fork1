@@ -92,6 +92,10 @@ def args_parser():
                         help="llmprop or matbert",
                         type=str,
                         default="llmprop")
+    parser.add_argument('--max_train_samples',
+                        help="Max number of training samples (0 = use all)",
+                        type=int,
+                        default=0)
     parser.add_argument('--regressor',
                         help="linear, ...",
                         type=str,

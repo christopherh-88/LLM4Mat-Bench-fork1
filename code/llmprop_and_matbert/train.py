@@ -404,6 +404,7 @@ if __name__ == "__main__":
     checkpoints_path = config.get('checkpoints_path')
     results_path = config.get('results_path')
     tokenizers_path = config.get('tokenizers_path')
+    max_train_samples = config.get('max_train_samples')
 
     if model_name == "matbert":
         pooling = None
@@ -457,6 +458,10 @@ if __name__ == "__main__":
     train_data = train_data.dropna(subset=[property]).reset_index(drop=True)
     valid_data = valid_data.dropna(subset=[property]).reset_index(drop=True)
     test_data = test_data.dropna(subset=[property]).reset_index(drop=True)
+
+    if max_train_samples > 0 and len(train_data) > max_train_samples:
+        train_data = train_data.sample(n=max_train_samples, random_state=42).reset_index(drop=True)
+        print(f"Subsampled training set to {max_train_samples} samples")
 
     # check property type to determine the task name (whether it is regression or classification)
     if train_data[property].dtype in ['bool', 'O']:

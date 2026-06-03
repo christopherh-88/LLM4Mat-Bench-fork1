@@ -389,7 +389,7 @@ if __name__ == "__main__":
             (v.shape[0] for k, v in ckpt.items() if 'shared.weight' in k or 'embed_tokens.weight' in k),
             len(tokenizer)
         )
-        base_model.resize_token_embeddings(ckpt_vocab_size)
+        base_model.resize_token_embeddings(max(ckpt_vocab_size, len(tokenizer)))
 
         best_model = Predictor(base_model, base_model_output_size, drop_rate=drop_rate, pooling=pooling, model_name=model_name)
 

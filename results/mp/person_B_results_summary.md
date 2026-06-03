@@ -56,8 +56,12 @@ Best validation MAE saved at **epoch 82 / 100**. Loss improved 33 times during t
 
 The paper's MAD:MAE of 9.1 reflects training on the full ~125K sample dataset with max_len=888. Our 20K subset has a narrower property distribution (lower MAD), and our shorter max_len=256 truncates description inputs. Both factors reduce the signal the model can learn, raising MAE and lowering MAD:MAE. This is an expected and documented constraint of running on free-tier Kaggle hardware.
 
-## Still Needed
+## Figures Generated
 
-- [ ] AUC for `is_stable` classification (formula + description inputs)
-- [ ] AUC for `is_gap_direct` classification (formula + description inputs)
-- [ ] GPU memory logging (requires re-run with `torch.cuda.max_memory_allocated()`)
+- `figures/person_B_llmprop_training_curves.png` — training + validation MAE curves for description and formula inputs
+- `figures/person_B_llmprop_parity_plot.png` — predicted vs. actual band gap scatter plots for description and formula inputs
+
+## Notes
+
+- Classification tasks (`is_stable`, `is_gap_direct`) are assigned to Person C (MatBERT), not Person B per the project roadmap.
+- GPU memory was not logged; this is documented as a deviation.
